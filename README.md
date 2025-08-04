@@ -23,7 +23,7 @@ A comprehensive project management system for Audio Visual projects with automat
 
 ## Usage
 
-1. Visit the live application: [AV Project Tracker](https://yourusername.github.io/av-project-tracker/)
+1. Visit the live application: [AV Project Tracker](https://samiraa78.github.io/av-project-tracker/)
 2. Add team members (AutoCAD designers and project managers)
 3. Create new projects or import from Excel templates
 4. Track project progress and receive automated reminders
