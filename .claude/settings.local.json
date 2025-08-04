@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(powershell:*)",
+      "Bash(start project-tracker-with-reminders.html)",
+      "Bash(start \"C:\\claude\\project-tracker\\project-tracker-with-reminders.html\")",
+      "Bash(git init:*)",
+      "Bash(copy:*)",
+      "Bash(cp:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": []
+  }
+}

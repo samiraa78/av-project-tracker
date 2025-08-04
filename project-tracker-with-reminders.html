@@ -1,0 +1,2844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AV Project Tracker - VCNS Global</title>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://html2canvas.herokuapp.com/dist/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, rgba(0, 102, 255, 0.8) 0%, rgba(147, 51, 234, 0.8) 50%, rgba(16, 185, 129, 0.8) 100%);
+            color: #ffffff;
+            font-weight: bold;
+            min-height: 100vh;
+            position: relative;
+            backdrop-filter: blur(20px);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(30px);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px 40px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #0066FF, #9333EA, #10B981);
+        }
+
+        .header-title {
+            display: flex;
+            flex-direction: column;
+            z-index: 2;
+        }
+
+        h1 {
+            color: #ffffff;
+            font-size: 3em;
+            margin: 0;
+            line-height: 1;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 102, 255, 0.3);
+        }
+
+        .subtitle {
+            color: #ffffff;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-top: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .project-ticker {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 15px 25px;
+            margin: 20px 0;
+            overflow: hidden;
+            position: relative;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .ticker-content {
+            display: flex;
+            animation: scroll-ticker 30s linear infinite;
+            white-space: nowrap;
+        }
+
+        .ticker-item {
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 21px;
+            margin-right: 60px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ticker-item.overdue {
+            color: #ffffff;
+        }
+
+        .ticker-item.due-today {
+            color: #ffffff;
+        }
+
+        .ticker-item.due-soon {
+            color: #ffffff;
+        }
+
+        @keyframes scroll-ticker {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            z-index: 2;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            font-family: 'Inter', sans-serif;
+            color: #ffffff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0066FF, #9333EA);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 102, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 102, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #475569, #64748b);
+            color: white;
+            box-shadow: 0 4px 15px rgba(71, 85, 105, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(71, 85, 105, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-radius: 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-papaya {
+            background: rgba(255, 159, 64, 0.6) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 159, 64, 0.5) !important;
+            color: rgba(255, 255, 255, 0.95) !important;
+            box-shadow: 
+                0 8px 32px rgba(255, 159, 64, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                inset 0 -1px 0 rgba(255, 159, 64, 0.1) !important;
+            position: relative !important;
+            overflow: hidden !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .btn-papaya::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: -100% !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent) !important;
+            transition: left 0.6s ease !important;
+        }
+
+        .btn-papaya:hover {
+            transform: translateY(-2px) scale(1.02) !important;
+            background: rgba(255, 159, 64, 0.7) !important;
+            border-color: rgba(255, 159, 64, 0.6) !important;
+            box-shadow: 
+                0 12px 40px rgba(255, 159, 64, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -1px 0 rgba(255, 159, 64, 0.15) !important;
+        }
+
+        .btn-papaya:hover::before {
+            left: 100% !important;
+        }
+
+        .btn-papaya:active {
+            transform: translateY(-1px) scale(0.98) !important;
+            background: rgba(255, 159, 64, 0.8) !important;
+        }
+
+        .filters {
+            margin-bottom: 30px;
+        }
+
+        .filters select {
+            padding: 12px 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 16px;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #ffffff;
+            font-weight: bold;
+            font-family: 'Inter', sans-serif;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .filters select option {
+            background: rgba(0, 0, 0, 0.9);
+            color: #ffffff;
+            font-weight: bold;
+            padding: 10px;
+        }
+
+        .filters select:focus {
+            outline: none;
+            border-color: #0066FF;
+            box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.2);
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+            gap: 25px;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 30px;
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 
+                0 20px 50px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            min-height: 450px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.8s ease;
+            pointer-events: none;
+        }
+
+        .project-card:hover::before {
+            left: 100%;
+        }
+
+        .project-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.35);
+            box-shadow: 
+                0 30px 60px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .project-card.overdue {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            box-shadow: 
+                0 20px 50px rgba(239, 68, 68, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                inset 0 -1px 0 rgba(239, 68, 68, 0.1);
+        }
+
+        .project-card.due-soon {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            box-shadow: 
+                0 20px 50px rgba(245, 158, 11, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                inset 0 -1px 0 rgba(245, 158, 11, 0.1);
+        }
+
+        .project-header {
+            margin-bottom: 20px;
+        }
+
+        .project-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.95);
+            margin: 0;
+            line-height: 1.3;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .project-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: nowrap;
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .project-description {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 14px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .project-meta {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 0;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .project-dates {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .meta-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            padding: 12px 15px;
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .meta-item:nth-child(even) {
+            border-right: none;
+        }
+
+        .meta-item:nth-last-child(-n+2) {
+            border-bottom: none;
+        }
+
+        .meta-label {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-space-planning { 
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8); 
+            color: #ffffff; 
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+        .status-dbr { 
+            background: linear-gradient(135deg, #f59e0b, #d97706); 
+            color: #ffffff; 
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+        .status-boq-submission { 
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed); 
+            color: #ffffff; 
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+        .status-tendering { 
+            background: linear-gradient(135deg, #ef4444, #dc2626); 
+            color: #ffffff; 
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+        .status-installation { 
+            background: linear-gradient(135deg, #10b981, #059669); 
+            color: #ffffff; 
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+        .status-complete { 
+            background: linear-gradient(135deg, #6366f1, #4f46e5); 
+            color: #ffffff; 
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        .priority-high { 
+            color: #ffffff; 
+            font-weight: bold;
+        }
+        .priority-medium { 
+            color: #ffffff; 
+            font-weight: bold;
+        }
+        .priority-low { 
+            color: #ffffff; 
+            font-weight: bold;
+        }
+
+        .due-date {
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .due-date.overdue {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .due-date.due-soon {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            overflow: visible;
+            margin-top: 15px;
+            border: 1px solid rgba(255,255,255,0.3);
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0066FF, #9333EA);
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 20px;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-stage-label {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(51, 65, 85, 0.9));
+            margin: 3% auto;
+            padding: 40px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            backdrop-filter: blur(20px);
+        }
+
+        .close {
+            color: #ffffff;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #0066FF;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #ffffff;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group select option {
+            background: rgba(0, 0, 0, 0.9);
+            color: #ffffff;
+            font-weight: bold;
+            padding: 8px;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: normal;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .checkbox-group label {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        #project-progress {
+            margin-bottom: 5px;
+        }
+
+        #progress-value {
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .data-controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(20px);
+        }
+
+        .data-controls button {
+            margin-right: 15px;
+            margin-bottom: 10px;
+        }
+
+        .reminder-settings {
+            background: rgba(0, 102, 255, 0.1);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 102, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .reminder-settings h4 {
+            color: #ffffff;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            z-index: 2000;
+            transition: opacity 0.3s;
+        }
+
+        .notification.success {
+            background-color: #27ae60;
+        }
+
+        .notification.error {
+            background-color: #e74c3c;
+        }
+
+        .notification.warning {
+            background-color: #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">
+                <h1>AV Project Tracker</h1>
+                <div class="subtitle">VCNS Global</div>
+            </div>
+            <div class="header-actions">
+                <button onclick="checkReminders()" class="btn btn-warning">Check Reminders</button>
+                <button onclick="showEmailSettings()" class="btn btn-secondary">Email Settings</button>
+                <button id="add-project-btn" class="btn btn-primary">+ Add Project</button>
+            </div>
+        </header>
+
+        <div class="project-ticker" id="project-ticker">
+            <div class="ticker-content" id="ticker-content">
+                <!-- Ticker items will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="data-controls">
+            <button onclick="exportData()" class="btn btn-secondary">Export Data</button>
+            <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+            <button onclick="document.getElementById('import-file').click()" class="btn btn-secondary">Import Data</button>
+            <button onclick="downloadCSVTemplate()" class="btn btn-primary">Download CSV Template</button>
+            <button onclick="downloadExcelTemplate()" class="btn btn-primary">Download Excel Template</button>
+            <button onclick="generateReport()" class="btn btn-warning">Generate Report</button>
+            <button onclick="clearAllData()" class="btn btn-danger">Clear All Data</button>
+        </div>
+
+        <div class="filters">
+            <select id="status-filter">
+                <option value="all">All Projects</option>
+                <option value="Space Planning">Space Planning</option>
+                <option value="DBR">DBR</option>
+                <option value="BOQ Submission">BOQ Submission</option>
+                <option value="Tendering">Tendering</option>
+                <option value="Installation">Installation</option>
+                <option value="Complete">Complete</option>
+                <option value="overdue">Overdue</option>
+                <option value="due-soon">Due Soon</option>
+            </select>
+        </div>
+
+        <div class="projects-grid" id="projects-grid">
+            <!-- Projects will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Hidden Report Generation Area -->
+    <div id="report-generation-area" style="position: absolute; left: -9999px; top: -9999px; width: 800px; height: 600px; background: white;">
+        <div id="report-charts-container" style="padding: 20px;">
+            <canvas id="status-chart" width="400" height="300"></canvas>
+            <canvas id="priority-chart" width="400" height="300"></canvas>
+            <canvas id="progress-chart" width="400" height="300"></canvas>
+            <canvas id="timeline-chart" width="800" height="300"></canvas>
+        </div>
+    </div>
+
+    <!-- Add/Edit Project Modal -->
+    <div id="project-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Add New Project</h2>
+            <form id="project-form">
+                <div class="form-group">
+                    <label for="project-name">Project Name:</label>
+                    <input type="text" id="project-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="project-description">Description:</label>
+                    <textarea id="project-description" rows="3"></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="project-status">Status:</label>
+                        <select id="project-status">
+                            <option value="Space Planning">Space Planning</option>
+                            <option value="DBR">DBR</option>
+                            <option value="BOQ Submission">BOQ Submission</option>
+                            <option value="Tendering">Tendering</option>
+                            <option value="Installation">Installation</option>
+                            <option value="Complete">Complete</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="project-priority">Priority:</label>
+                        <select id="project-priority">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="project-start-date">Start Date:</label>
+                        <input type="date" id="project-start-date">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="project-due-date">Due Date:</label>
+                        <input type="date" id="project-due-date">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="project-progress">Progress:</label>
+                    <input type="range" id="project-progress" min="0" max="100" value="0">
+                    <span id="progress-value">0%</span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="autocad-designer">AutoCAD Designer:</label>
+                        <select id="autocad-designer">
+                            <option value="">Select Designer</option>
+                        </select>
+                        <button type="button" class="btn btn-secondary btn-small" style="margin-top: 5px;" onclick="showDesignerManager()">Manage Designers</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="project-manager">Project Manager:</label>
+                        <select id="project-manager">
+                            <option value="">Select Manager</option>
+                        </select>
+                        <button type="button" class="btn btn-secondary btn-small" style="margin-top: 5px;" onclick="showManagerManager()">Manage Managers</button>
+                    </div>
+                </div>
+
+                <div class="reminder-settings">
+                    <h4>Email Reminder Settings</h4>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="enable-reminders">
+                        <label for="enable-reminders">Enable email reminders for this project</label>
+                    </div>
+                    <div class="form-row" style="margin-top: 15px;">
+                        <div class="form-group">
+                            <label for="reminder-days">Remind Me:</label>
+                            <select id="reminder-days">
+                                <option value="1">1 day</option>
+                                <option value="3" selected>3 days</option>
+                                <option value="7">7 days</option>
+                                <option value="14">14 days</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="reminder-email">Email Address:</label>
+                            <input type="email" id="reminder-email" placeholder="your@email.com">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Email Settings Modal -->
+    <div id="email-settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="hideEmailSettings()">&times;</span>
+            <h2>Email Settings</h2>
+            <p style="color: #666; margin-bottom: 20px;">Configure EmailJS settings to enable email reminders. You'll need to create a free account at <a href="https://www.emailjs.com" target="_blank">EmailJS.com</a></p>
+            
+            <div class="form-group">
+                <label for="emailjs-service-id">EmailJS Service ID:</label>
+                <input type="text" id="emailjs-service-id" placeholder="service_xxxxxxx">
+            </div>
+            
+            <div class="form-group">
+                <label for="emailjs-template-id">EmailJS Template ID:</label>
+                <input type="text" id="emailjs-template-id" placeholder="template_xxxxxxx">
+            </div>
+            
+            <div class="form-group">
+                <label for="emailjs-public-key">EmailJS Public Key:</label>
+                <input type="text" id="emailjs-public-key" placeholder="xxxxxxxxxxxxxxxx">
+            </div>
+
+            <div class="form-group">
+                <label for="default-email">Default Email Address:</label>
+                <input type="email" id="default-email" placeholder="your@email.com">
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="hideEmailSettings()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveEmailSettings()">Save Settings</button>
+                <button type="button" class="btn btn-warning" onclick="testEmailSettings()">Test Email</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Designer Management Modal -->
+    <div id="designer-manager-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="hideDesignerManager()">&times;</span>
+            <h2>Manage AutoCAD Designers</h2>
+            
+            <div class="form-group">
+                <label for="designer-name">Designer Name:</label>
+                <input type="text" id="designer-name" placeholder="Enter name">
+            </div>
+            
+            <div class="form-group">
+                <label for="designer-email">Email:</label>
+                <input type="email" id="designer-email" placeholder="Enter email">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="addDesigner()">Add Designer</button>
+            </div>
+            
+            <div id="designers-list"></div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="hideDesignerManager()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manager Management Modal -->
+    <div id="manager-manager-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="hideManagerManager()">&times;</span>
+            <h2>Manage Project Managers</h2>
+            
+            <div class="form-group">
+                <label for="manager-name">Manager Name:</label>
+                <input type="text" id="manager-name" placeholder="Enter name">
+            </div>
+            
+            <div class="form-group">
+                <label for="manager-email">Email:</label>
+                <input type="email" id="manager-email" placeholder="Enter email">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="addManager()">Add Manager</button>
+            </div>
+            
+            <div id="managers-list"></div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="hideManagerManager()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ProjectTracker {
+            constructor() {
+                this.projects = JSON.parse(localStorage.getItem('projects')) || [];
+                this.emailSettings = JSON.parse(localStorage.getItem('emailSettings')) || {};
+                this.autocadDesigners = JSON.parse(localStorage.getItem('autocadDesigners')) || [
+                    { name: 'Mr. Ronak', email: 'ronak@vcnsglobal.com' },
+                    { name: 'Asmita', email: 'Asmita@vcnsglobal.com' },
+                    { name: 'Saniket', email: 'saniket@vcnsglobal.com' },
+                    { name: 'Ankit', email: 'ankit@vcnsglobal' }
+                ];
+                this.projectManagers = JSON.parse(localStorage.getItem('projectManagers')) || [
+                    { name: 'Rajiv', email: 'rajiv@vcnsglobal.com' },
+                    { name: 'Ravin', email: 'ravin@vcnsglobal.com' },
+                    { name: 'Ganesh', email: 'ganesh@vcnsglobal.com' }
+                ];
+                this.editingProjectId = null;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.renderProjects();
+                this.updateTicker();
+                this.populateDropdowns();
+                this.initEmailJS();
+                // Check for reminders on load
+                setTimeout(() => this.checkReminders(), 2000);
+            }
+
+            initEmailJS() {
+                if (this.emailSettings.publicKey) {
+                    emailjs.init(this.emailSettings.publicKey);
+                }
+            }
+
+            bindEvents() {
+                // Modal events
+                document.getElementById('add-project-btn').addEventListener('click', () => {
+                    this.showModal();
+                });
+
+                document.querySelector('.close').addEventListener('click', () => {
+                    this.hideModal();
+                });
+
+                document.getElementById('cancel-btn').addEventListener('click', () => {
+                    this.hideModal();
+                });
+
+                // Form submission
+                document.getElementById('project-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveProject();
+                });
+
+                // Filter events
+                document.getElementById('status-filter').addEventListener('change', (e) => {
+                    this.filterProjects(e.target.value);
+                });
+
+                // Progress slider
+                document.getElementById('project-progress').addEventListener('input', (e) => {
+                    document.getElementById('progress-value').textContent = e.target.value + '%';
+                });
+
+                // Close modal when clicking outside
+                document.getElementById('project-modal').addEventListener('click', (e) => {
+                    if (e.target.id === 'project-modal') {
+                        this.hideModal();
+                    }
+                });
+
+                // Email settings events
+                document.getElementById('email-settings-modal').addEventListener('click', (e) => {
+                    if (e.target.id === 'email-settings-modal') {
+                        this.hideEmailSettings();
+                    }
+                });
+            }
+
+            saveData() {
+                localStorage.setItem('projects', JSON.stringify(this.projects));
+            }
+
+            saveDesigners() {
+                localStorage.setItem('autocadDesigners', JSON.stringify(this.autocadDesigners));
+            }
+
+            saveManagers() {
+                localStorage.setItem('projectManagers', JSON.stringify(this.projectManagers));
+            }
+
+            populateDropdowns() {
+                const designerSelect = document.getElementById('autocad-designer');
+                const managerSelect = document.getElementById('project-manager');
+
+                // Clear existing options except first
+                designerSelect.innerHTML = '<option value="">Select Designer</option>';
+                managerSelect.innerHTML = '<option value="">Select Manager</option>';
+
+                // Populate designers
+                this.autocadDesigners.forEach((designer, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${designer.name} (${designer.email})`;
+                    designerSelect.appendChild(option);
+                });
+
+                // Populate managers
+                this.projectManagers.forEach((manager, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${manager.name} (${manager.email})`;
+                    managerSelect.appendChild(option);
+                });
+            }
+
+            updateTicker() {
+                const tickerContent = document.getElementById('ticker-content');
+                const today = new Date();
+                
+                // Get projects with due dates and sort by due date
+                const projectsWithDueDates = this.projects
+                    .filter(project => project.dueDate)
+                    .map(project => ({
+                        ...project,
+                        daysUntil: this.getDaysUntilDue(project.dueDate)
+                    }))
+                    .sort((a, b) => a.daysUntil - b.daysUntil)
+                    .slice(0, 5); // Get nearest 5 projects
+
+                if (projectsWithDueDates.length === 0) {
+                    tickerContent.innerHTML = '<div class="ticker-item">📅 No upcoming project deadlines</div>';
+                    return;
+                }
+
+                const tickerItems = projectsWithDueDates.map(project => {
+                    const dueDate = new Date(project.dueDate).toLocaleDateString();
+                    let statusClass = '';
+                    let urgencyText = '';
+                    
+                    if (project.daysUntil < 0) {
+                        statusClass = 'overdue';
+                        urgencyText = `⚠️ ${project.name} - ${Math.abs(project.daysUntil)} days overdue (${dueDate})`;
+                    } else if (project.daysUntil === 0) {
+                        statusClass = 'due-today';
+                        urgencyText = `🔥 ${project.name} - Due TODAY (${dueDate})`;
+                    } else if (project.daysUntil <= 7) {
+                        statusClass = 'due-soon';
+                        urgencyText = `📋 ${project.name} - Due in ${project.daysUntil} day${project.daysUntil > 1 ? 's' : ''} (${dueDate})`;
+                    } else {
+                        urgencyText = `📅 ${project.name} - Due in ${project.daysUntil} days (${dueDate})`;
+                    }
+                    
+                    return `<div class="ticker-item ${statusClass}">${urgencyText}</div>`;
+                }).join('');
+
+                tickerContent.innerHTML = tickerItems;
+            }
+
+            getDaysUntilDue(dueDate) {
+                if (!dueDate) return null;
+                
+                // Get current date in IST
+                const now = new Date();
+                const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+                const istNow = new Date(now.getTime() + istOffset);
+                const today = new Date(istNow.getFullYear(), istNow.getMonth(), istNow.getDate());
+                
+                // Get due date in IST
+                const due = new Date(dueDate);
+                const istDue = new Date(due.getTime() + istOffset);
+                const dueDay = new Date(istDue.getFullYear(), istDue.getMonth(), istDue.getDate());
+                
+                const diffTime = dueDay - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays;
+            }
+
+            getProjectStatus(project) {
+                if (!project.dueDate) return '';
+                const daysUntil = this.getDaysUntilDue(project.dueDate);
+                if (daysUntil < 0) return 'overdue';
+                if (daysUntil <= 7) return 'due-soon';
+                return '';
+            }
+
+            renderProjects(projectsToRender = null) {
+                const grid = document.getElementById('projects-grid');
+                const projects = projectsToRender || this.projects;
+
+                if (projects.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-state">
+                            <h3>No projects found</h3>
+                            <p>Click "Add Project" to get started!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = projects.map(project => this.createProjectCard(project)).join('');
+            }
+
+            createProjectCard(project) {
+                const statusClass = project.status.toLowerCase().replace(' ', '-');
+                const priorityClass = project.priority.toLowerCase();
+                const projectStatusClass = this.getProjectStatus(project);
+                const daysUntil = project.dueDate ? this.getDaysUntilDue(project.dueDate) : null;
+                
+                // Auto-calculate progress based on status if not set or is 0
+                const progressByStatus = {
+                    'Space Planning': 17,
+                    'DBR': 33,
+                    'BOQ Submission': 50,
+                    'Tendering': 67,
+                    'Installation': 83,
+                    'Complete': 100
+                };
+                
+                const calculatedProgress = project.progress > 0 ? project.progress : (progressByStatus[project.status] || 0);
+                
+                let dueDateDisplay = '';
+                if (project.dueDate) {
+                    dueDateDisplay = new Date(project.dueDate).toLocaleDateString();
+                }
+                
+                return `
+                    <div class="project-card ${projectStatusClass}">
+                        <div class="project-header">
+                            <h3 class="project-title">${project.name}</h3>
+                        </div>
+                        
+                        <div class="project-content">
+                            <p class="project-description">${project.description || 'No description'}</p>
+                            
+                            <div class="project-meta">
+                                <div class="meta-item">
+                                    <span class="meta-label">Status:</span>
+                                    <span class="status-badge status-${statusClass}">${project.status}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Priority:</span>
+                                    <span class="priority-${priorityClass}">${project.priority}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Created:</span>
+                                    <span>${new Date(project.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Progress:</span>
+                                    <span>${calculatedProgress}%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="project-dates">
+                                ${project.autocadDesigner !== undefined && project.autocadDesigner !== '' ? `
+                                    <div class="meta-item">
+                                        <span class="meta-label">AD:</span>
+                                        <span>${this.autocadDesigners[project.autocadDesigner]?.name || 'Not Assigned'}</span>
+                                    </div>
+                                ` : '<div></div>'}
+                                ${project.projectManager !== undefined && project.projectManager !== '' ? `
+                                    <div class="meta-item">
+                                        <span class="meta-label">PM:</span>
+                                        <span>${this.projectManagers[project.projectManager]?.name || 'Not Assigned'}</span>
+                                    </div>
+                                ` : '<div></div>'}
+                            </div>
+                            
+                            <div class="project-dates">
+                                ${project.startDate ? `
+                                    <div class="meta-item">
+                                        <span class="meta-label">Start:</span>
+                                        <span>${new Date(project.startDate).toLocaleDateString()}</span>
+                                    </div>
+                                ` : '<div></div>'}
+                                ${project.dueDate ? `
+                                    <div class="meta-item">
+                                        <span class="meta-label">Due:</span>
+                                        <span class="due-date ${projectStatusClass}">${dueDateDisplay}</span>
+                                    </div>
+                                ` : '<div></div>'}
+                            </div>
+                            
+                            ${project.enableReminders ? `
+                                <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                                    📧 Email reminders enabled (${project.reminderDays} days before)
+                                </div>
+                            ` : ''}
+                            
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${calculatedProgress}%">
+                                    <div class="progress-stage-label">${project.status}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="project-actions">
+                            ${calculatedProgress < 100 ? `<button class="btn btn-small btn-papaya" onclick="app.markTaskCompleted('${project.id}')">Task Completed</button>` : ''}
+                            ${daysUntil === 0 ? `<button class="btn btn-small btn-papaya" onclick="app.sendManualReminder('${project.id}')">Send Reminder</button>` : ''}
+                            <button class="btn btn-small btn-papaya" onclick="app.editProject('${project.id}')">Edit</button>
+                            <button class="btn btn-small btn-papaya" onclick="app.deleteProject('${project.id}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            showModal(project = null) {
+                const modal = document.getElementById('project-modal');
+                const title = document.getElementById('modal-title');
+                
+                if (project) {
+                    title.textContent = 'Edit Project';
+                    this.editingProjectId = project.id;
+                    this.fillForm(project);
+                } else {
+                    title.textContent = 'Add New Project';
+                    this.editingProjectId = null;
+                    this.clearForm();
+                }
+                
+                modal.style.display = 'block';
+            }
+
+            hideModal() {
+                document.getElementById('project-modal').style.display = 'none';
+                this.editingProjectId = null;
+                this.clearForm();
+            }
+
+            fillForm(project) {
+                document.getElementById('project-name').value = project.name;
+                document.getElementById('project-description').value = project.description || '';
+                document.getElementById('project-status').value = project.status;
+                document.getElementById('project-priority').value = project.priority;
+                document.getElementById('project-start-date').value = project.startDate ? project.startDate.split('T')[0] : '';
+                document.getElementById('project-due-date').value = project.dueDate ? project.dueDate.split('T')[0] : '';
+                document.getElementById('project-progress').value = project.progress;
+                document.getElementById('progress-value').textContent = project.progress + '%';
+                
+                // Designer and Manager
+                document.getElementById('autocad-designer').value = project.autocadDesigner || '';
+                document.getElementById('project-manager').value = project.projectManager || '';
+                
+                // Reminder settings
+                document.getElementById('enable-reminders').checked = project.enableReminders || false;
+                document.getElementById('reminder-days').value = project.reminderDays || '3';
+                document.getElementById('reminder-email').value = project.reminderEmail || this.emailSettings.defaultEmail || '';
+            }
+
+            clearForm() {
+                document.getElementById('project-form').reset();
+                document.getElementById('progress-value').textContent = '0%';
+                document.getElementById('reminder-email').value = this.emailSettings.defaultEmail || '';
+            }
+
+            saveProject() {
+                const formData = {
+                    name: document.getElementById('project-name').value,
+                    description: document.getElementById('project-description').value,
+                    status: document.getElementById('project-status').value,
+                    priority: document.getElementById('project-priority').value,
+                    startDate: document.getElementById('project-start-date').value || null,
+                    dueDate: document.getElementById('project-due-date').value || null,
+                    progress: parseInt(document.getElementById('project-progress').value),
+                    autocadDesigner: document.getElementById('autocad-designer').value,
+                    projectManager: document.getElementById('project-manager').value,
+                    enableReminders: document.getElementById('enable-reminders').checked,
+                    reminderDays: parseInt(document.getElementById('reminder-days').value),
+                    reminderEmail: document.getElementById('reminder-email').value
+                };
+
+                if (this.editingProjectId) {
+                    const index = this.projects.findIndex(p => p.id === this.editingProjectId);
+                    if (index !== -1) {
+                        this.projects[index] = {
+                            ...this.projects[index],
+                            ...formData,
+                            updatedAt: new Date().toISOString()
+                        };
+                    }
+                } else {
+                    const newProject = {
+                        id: Date.now().toString(),
+                        ...formData,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        lastReminderSent: null
+                    };
+                    this.projects.push(newProject);
+                }
+                
+                this.saveData();
+                this.renderProjects();
+                this.updateTicker();
+                this.hideModal();
+            }
+
+            editProject(id) {
+                const project = this.projects.find(p => p.id === id);
+                if (project) {
+                    this.showModal(project);
+                }
+            }
+
+            deleteProject(id) {
+                if (confirm('Are you sure you want to delete this project?')) {
+                    this.projects = this.projects.filter(p => p.id !== id);
+                    this.saveData();
+                    this.renderProjects();
+                    this.updateTicker();
+                }
+            }
+
+            filterProjects(filter) {
+                let filteredProjects = this.projects;
+                
+                if (filter !== 'all') {
+                    if (filter === 'overdue') {
+                        filteredProjects = this.projects.filter(p => {
+                            return p.dueDate && this.getDaysUntilDue(p.dueDate) < 0;
+                        });
+                    } else if (filter === 'due-soon') {
+                        filteredProjects = this.projects.filter(p => {
+                            const days = this.getDaysUntilDue(p.dueDate);
+                            return p.dueDate && days >= 0 && days <= 7;
+                        });
+                    } else {
+                        filteredProjects = this.projects.filter(p => p.status === filter);
+                    }
+                }
+                
+                this.renderProjects(filteredProjects);
+            }
+
+            async checkReminders() {
+                if (!this.emailSettings.serviceId || !this.emailSettings.templateId || !this.emailSettings.publicKey) {
+                    this.showNotification('Please configure email settings first', 'warning');
+                    return;
+                }
+
+                // Get current date in IST
+                const now = new Date();
+                const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+                const istNow = new Date(now.getTime() + istOffset);
+                const today = new Date(istNow.getFullYear(), istNow.getMonth(), istNow.getDate());
+                const projectsToRemind = [];
+
+                this.projects.forEach(project => {
+                    if (!project.dueDate) return;
+
+                    const daysUntil = this.getDaysUntilDue(project.dueDate);
+                    const reminderStages = [7, 3, 0]; // 7 days, 3 days, due date
+                    
+                    reminderStages.forEach(stage => {
+                        if (daysUntil === stage) {
+                            // Check if we already sent this stage reminder
+                            const reminderKey = `reminder_${stage}d_${project.dueDate}`;
+                            const lastReminder = project.lastRemindersSent ? project.lastRemindersSent[reminderKey] : null;
+                            const alreadySentToday = lastReminder && 
+                                new Date(lastReminder).toDateString() === today.toDateString();
+
+                            if (!alreadySentToday) {
+                                projectsToRemind.push({
+                                    ...project,
+                                    reminderStage: stage,
+                                    reminderKey: reminderKey
+                                });
+                            }
+                        }
+                    });
+                });
+
+                if (projectsToRemind.length === 0) {
+                    this.showNotification('No reminders to send', 'success');
+                    return;
+                }
+
+                for (const project of projectsToRemind) {
+                    await this.sendAutomatedReminderEmail(project);
+                }
+            }
+
+            async sendAutomatedReminderEmail(project) {
+                const daysUntil = project.reminderStage;
+                let urgencyText = '';
+                let subjectPrefix = '';
+
+                if (daysUntil === 0) {
+                    urgencyText = 'due TODAY!';
+                    subjectPrefix = 'URGENT - ';
+                } else if (daysUntil === 3) {
+                    urgencyText = 'due in 3 days';
+                    subjectPrefix = 'REMINDER - ';
+                } else if (daysUntil === 7) {
+                    urgencyText = 'due in 7 days';
+                    subjectPrefix = 'NOTICE - ';
+                }
+
+                // Get recipient emails
+                const recipients = ['samir@vcnsglobal.com']; // Always include Samir
+                
+                // Add AutoCAD Designer email if assigned
+                if (project.autocadDesigner !== undefined && project.autocadDesigner !== '') {
+                    const designer = this.autocadDesigners[project.autocadDesigner];
+                    if (designer && designer.email) {
+                        recipients.push(designer.email);
+                    }
+                }
+                
+                // Add Project Manager email if assigned
+                if (project.projectManager !== undefined && project.projectManager !== '') {
+                    const manager = this.projectManagers[project.projectManager];
+                    if (manager && manager.email) {
+                        recipients.push(manager.email);
+                    }
+                }
+
+                // Remove duplicates
+                const uniqueRecipients = [...new Set(recipients)];
+
+                const templateParams = {
+                    to_email: uniqueRecipients.join(','),
+                    to_name: 'Team',
+                    from_name: 'AV Project Tracker - VCNS Global',
+                    subject: `${subjectPrefix}${project.name}`,
+                    message: `
+Project: ${project.name}
+
+Description: ${project.description || 'No description provided'}
+
+Project Details:
+- Status: ${project.status}
+- Priority: ${project.priority}
+- Progress: ${project.progress}%
+- AutoCAD Designer: ${project.autocadDesigner !== undefined && project.autocadDesigner !== '' ? 
+    this.autocadDesigners[project.autocadDesigner]?.name : 'Not Assigned'}
+- Project Manager: ${project.projectManager !== undefined && project.projectManager !== '' ? 
+    this.projectManagers[project.projectManager]?.name : 'Not Assigned'}
+- Start Date: ${project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not Set'}
+- Due Date: ${new Date(project.dueDate).toLocaleDateString()}
+
+⚠️ This project is ${urgencyText}
+
+Please take necessary action to ensure timely completion.
+
+---
+AV Project Tracker - VCNS Global
+                    `,
+                    project_name: project.name,
+                    project_description: project.description || 'No description provided',
+                    due_date: new Date(project.dueDate).toLocaleDateString(),
+                    urgency: urgencyText,
+                    progress: project.progress,
+                    priority: project.priority,
+                    status: project.status,
+                    autocad_designer: project.autocadDesigner !== undefined && project.autocadDesigner !== '' ? 
+                        this.autocadDesigners[project.autocadDesigner]?.name : 'Not Assigned',
+                    project_manager: project.projectManager !== undefined && project.projectManager !== '' ? 
+                        this.projectManagers[project.projectManager]?.name : 'Not Assigned',
+                    start_date: project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not Set'
+                };
+
+                try {
+                    await emailjs.send(
+                        this.emailSettings.serviceId,
+                        this.emailSettings.templateId,
+                        templateParams
+                    );
+
+                    // Update reminder tracking
+                    const projectIndex = this.projects.findIndex(p => p.id === project.id);
+                    if (projectIndex !== -1) {
+                        if (!this.projects[projectIndex].lastRemindersSent) {
+                            this.projects[projectIndex].lastRemindersSent = {};
+                        }
+                        this.projects[projectIndex].lastRemindersSent[project.reminderKey] = new Date().toISOString();
+                        this.saveData();
+                    }
+
+                    this.showNotification(`${urgencyText.toUpperCase()} reminder sent for: ${project.name} to ${uniqueRecipients.length} recipient(s)`, 'success');
+                } catch (error) {
+                    console.error('Email sending failed:', error);
+                    this.showNotification(`Failed to send reminder for: ${project.name}`, 'error');
+                }
+            }
+
+            async sendReminderEmail(project) {
+                const daysUntil = this.getDaysUntilDue(project.dueDate);
+                const urgencyText = daysUntil === 0 ? 'due today!' : 
+                                  daysUntil < 0 ? `${Math.abs(daysUntil)} days overdue!` :
+                                  `due in ${daysUntil} days`;
+
+                const templateParams = {
+                    to_email: project.reminderEmail,
+                    project_name: project.name,
+                    project_description: project.description || 'No description',
+                    due_date: new Date(project.dueDate).toLocaleDateString(),
+                    urgency: urgencyText,
+                    progress: project.progress,
+                    priority: project.priority,
+                    status: project.status
+                };
+
+                try {
+                    await emailjs.send(
+                        this.emailSettings.serviceId,
+                        this.emailSettings.templateId,
+                        templateParams
+                    );
+
+                    // Update last reminder sent date
+                    const projectIndex = this.projects.findIndex(p => p.id === project.id);
+                    if (projectIndex !== -1) {
+                        this.projects[projectIndex].lastReminderSent = new Date().toISOString();
+                        this.saveData();
+                    }
+
+                    this.showNotification(`Reminder sent for: ${project.name}`, 'success');
+                } catch (error) {
+                    console.error('Email sending failed:', error);
+                    this.showNotification(`Failed to send reminder for: ${project.name}`, 'error');
+                }
+            }
+
+            async sendManualReminder(projectId) {
+                const project = this.projects.find(p => p.id === projectId);
+                if (!project) {
+                    this.showNotification('Project not found', 'error');
+                    return;
+                }
+
+                if (!project.dueDate) {
+                    this.showNotification('This project has no due date set', 'warning');
+                    return;
+                }
+
+                const daysUntil = this.getDaysUntilDue(project.dueDate);
+                if (daysUntil !== 0) {
+                    this.showNotification('Manual reminders are only available for tasks due today', 'warning');
+                    return;
+                }
+
+                if (!this.emailSettings.serviceId || !this.emailSettings.templateId || !this.emailSettings.publicKey) {
+                    this.showNotification('Please configure email settings first', 'warning');
+                    return;
+                }
+
+                // Create a temporary project object with reminder stage for due today
+                const reminderProject = {
+                    ...project,
+                    reminderStage: 0,
+                    reminderKey: `manual_reminder_${Date.now()}`
+                };
+
+                try {
+                    await this.sendAutomatedReminderEmail(reminderProject);
+                    this.showNotification(`Manual reminder sent for project: ${project.name}`, 'success');
+                } catch (error) {
+                    console.error('Manual reminder failed:', error);
+                    this.showNotification(`Failed to send manual reminder for: ${project.name}`, 'error');
+                }
+            }
+
+            async markTaskCompleted(projectId) {
+                const project = this.projects.find(p => p.id === projectId);
+                if (!project) {
+                    this.showNotification('Project not found', 'error');
+                    return;
+                }
+
+                if (project.progress >= 100) {
+                    this.showNotification('This project is already completed', 'warning');
+                    return;
+                }
+
+                // Confirm action
+                const confirmed = confirm(`Mark "${project.name}" as completed?\n\nThis will set progress to 100% and update the status to Complete.`);
+                if (!confirmed) {
+                    return;
+                }
+
+                // Update project to completed status
+                const updatedProject = {
+                    ...project,
+                    progress: 100,
+                    status: 'Complete',
+                    updatedAt: new Date().toISOString(),
+                    completedAt: new Date().toISOString()
+                };
+
+                // Update the project in the array
+                const projectIndex = this.projects.findIndex(p => p.id === projectId);
+                if (projectIndex !== -1) {
+                    this.projects[projectIndex] = updatedProject;
+                    this.saveData();
+                    this.renderProjects();
+                    this.updateTicker();
+                    
+                    this.showNotification(`"${project.name}" marked as completed!`, 'success');
+                    
+                    // Send completion notification email if email is configured
+                    if (this.emailSettings.serviceId && this.emailSettings.templateId && this.emailSettings.publicKey) {
+                        await this.sendTaskCompletionEmail(updatedProject);
+                    }
+                }
+            }
+
+            async sendTaskCompletionEmail(project) {
+                // Get recipient emails
+                const recipients = ['samir@vcnsglobal.com']; // Always include Samir
+                
+                // Add AutoCAD Designer email if assigned
+                if (project.autocadDesigner !== undefined && project.autocadDesigner !== '') {
+                    const designer = this.autocadDesigners[project.autocadDesigner];
+                    if (designer && designer.email) {
+                        recipients.push(designer.email);
+                    }
+                }
+                
+                // Add Project Manager email if assigned
+                if (project.projectManager !== undefined && project.projectManager !== '') {
+                    const manager = this.projectManagers[project.projectManager];
+                    if (manager && manager.email) {
+                        recipients.push(manager.email);
+                    }
+                }
+
+                // Remove duplicates
+                const uniqueRecipients = [...new Set(recipients)];
+
+                const templateParams = {
+                    to_email: uniqueRecipients.join(','),
+                    to_name: 'Team',
+                    from_name: 'AV Project Tracker - VCNS Global',
+                    subject: `✅ COMPLETED - ${project.name}`,
+                    message: `
+🎉 PROJECT COMPLETED! 🎉
+
+Project: ${project.name}
+
+Description: ${project.description || 'No description provided'}
+
+Project Details:
+- Status: ${project.status}
+- Priority: ${project.priority}
+- Progress: 100% ✅
+- AutoCAD Designer: ${project.autocadDesigner !== undefined && project.autocadDesigner !== '' ? 
+    this.autocadDesigners[project.autocadDesigner]?.name : 'Not Assigned'}
+- Project Manager: ${project.projectManager !== undefined && project.projectManager !== '' ? 
+    this.projectManagers[project.projectManager]?.name : 'Not Assigned'}
+- Start Date: ${project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not Set'}
+- Due Date: ${project.dueDate ? new Date(project.dueDate).toLocaleDateString() : 'Not Set'}
+- Completed Date: ${new Date().toLocaleDateString()}
+
+✅ This project has been successfully completed!
+
+Congratulations to the team on the successful completion of this project.
+
+---
+AV Project Tracker - VCNS Global
+                    `,
+                    project_name: project.name,
+                    project_description: project.description || 'No description provided',
+                    due_date: project.dueDate ? new Date(project.dueDate).toLocaleDateString() : 'Not Set',
+                    urgency: 'Project Completed',
+                    progress: '100',
+                    priority: project.priority,
+                    status: project.status,
+                    autocad_designer: project.autocadDesigner !== undefined && project.autocadDesigner !== '' ? 
+                        this.autocadDesigners[project.autocadDesigner]?.name : 'Not Assigned',
+                    project_manager: project.projectManager !== undefined && project.projectManager !== '' ? 
+                        this.projectManagers[project.projectManager]?.name : 'Not Assigned',
+                    start_date: project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not Set'
+                };
+
+                try {
+                    await emailjs.send(
+                        this.emailSettings.serviceId,
+                        this.emailSettings.templateId,
+                        templateParams
+                    );
+
+                    this.showNotification(`Completion notification sent for: ${project.name}`, 'success');
+                } catch (error) {
+                    console.error('Completion email sending failed:', error);
+                    this.showNotification(`Failed to send completion notification for: ${project.name}`, 'warning');
+                }
+            }
+
+            showNotification(message, type = 'success') {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+            }
+        }
+
+        // Email Settings Functions
+        function showEmailSettings() {
+            const modal = document.getElementById('email-settings-modal');
+            const settings = JSON.parse(localStorage.getItem('emailSettings')) || {};
+            
+            document.getElementById('emailjs-service-id').value = settings.serviceId || '';
+            document.getElementById('emailjs-template-id').value = settings.templateId || '';
+            document.getElementById('emailjs-public-key').value = settings.publicKey || '';
+            document.getElementById('default-email').value = settings.defaultEmail || '';
+            
+            modal.style.display = 'block';
+        }
+
+        function hideEmailSettings() {
+            document.getElementById('email-settings-modal').style.display = 'none';
+        }
+
+        function saveEmailSettings() {
+            const settings = {
+                serviceId: document.getElementById('emailjs-service-id').value,
+                templateId: document.getElementById('emailjs-template-id').value,
+                publicKey: document.getElementById('emailjs-public-key').value,
+                defaultEmail: document.getElementById('default-email').value
+            };
+            
+            localStorage.setItem('emailSettings', JSON.stringify(settings));
+            app.emailSettings = settings;
+            app.initEmailJS();
+            
+            hideEmailSettings();
+            app.showNotification('Email settings saved successfully!', 'success');
+        }
+
+        async function testEmailSettings() {
+            const settings = {
+                serviceId: document.getElementById('emailjs-service-id').value,
+                templateId: document.getElementById('emailjs-template-id').value,
+                publicKey: document.getElementById('emailjs-public-key').value,
+                defaultEmail: document.getElementById('default-email').value
+            };
+
+            if (!settings.serviceId || !settings.templateId || !settings.publicKey || !settings.defaultEmail) {
+                app.showNotification('Please fill in all email settings', 'error');
+                return;
+            }
+
+            try {
+                emailjs.init(settings.publicKey);
+                await emailjs.send(settings.serviceId, settings.templateId, {
+                    to_email: settings.defaultEmail,
+                    to_name: 'Test User',
+                    from_name: 'AV Project Tracker - VCNS Global',
+                    subject: 'TEST - Project Tracker Email Test',
+                    message: `
+Project: Test Project
+
+Description: This is a test email from your AV Project Tracker application.
+
+Project Details:
+- Status: In Progress
+- Priority: Medium
+- Progress: 50%
+- AutoCAD Designer: Test Designer
+- Project Manager: Test Manager
+- Start Date: ${new Date().toLocaleDateString()}
+- Due Date: ${new Date().toLocaleDateString()}
+
+⚠️ This is a TEST EMAIL
+
+Your email configuration is working correctly!
+
+---
+AV Project Tracker - VCNS Global
+                    `,
+                    project_name: 'Test Project',
+                    project_description: 'This is a test email from your Project Tracker app.',
+                    due_date: new Date().toLocaleDateString(),
+                    urgency: 'This is a test',
+                    progress: '50',
+                    priority: 'Medium',
+                    status: 'In Progress'
+                });
+                
+                app.showNotification('Test email sent successfully!', 'success');
+            } catch (error) {
+                console.error('Test email failed:', error);
+                app.showNotification('Test email failed. Please check your settings.', 'error');
+            }
+        }
+
+        // Global functions for data management
+        function exportData() {
+            const data = {
+                projects: JSON.parse(localStorage.getItem('projects') || '[]'),
+                emailSettings: JSON.parse(localStorage.getItem('emailSettings') || '{}')
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'project-tracker-backup.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (data.projects) {
+                            // Auto-calculate progress based on status for each project
+                            const processedProjects = data.projects.map(project => {
+                                const progressByStatus = {
+                                    'Space Planning': 20,
+                                    'DBR': 40,
+                                    'BOQ Submission': 60,
+                                    'Tendering': 80,
+                                    'Installation': 90,
+                                    'Complete': 100
+                                };
+                                
+                                return {
+                                    ...project,
+                                    progress: project.progress !== undefined ? project.progress : (progressByStatus[project.status] || 0),
+                                    enableReminders: true, // Force enable reminders for all imported projects
+                                    reminderDays: 3, // Set default reminder days
+                                    id: project.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                                    createdAt: project.createdAt || new Date().toISOString(),
+                                    updatedAt: new Date().toISOString(),
+                                    lastReminderSent: null
+                                };
+                            });
+                            
+                            localStorage.setItem('projects', JSON.stringify(processedProjects));
+                        }
+                        if (data.emailSettings) {
+                            localStorage.setItem('emailSettings', JSON.stringify(data.emailSettings));
+                        }
+                        location.reload();
+                    } catch (error) {
+                        app.showNotification('Invalid file format', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to delete all projects and settings? This cannot be undone.')) {
+                localStorage.removeItem('projects');
+                localStorage.removeItem('emailSettings');
+                location.reload();
+            }
+        }
+
+        function downloadCSVTemplate() {
+            const csvHeaders = [
+                'Project Name',
+                'Description', 
+                'Status',
+                'Priority',
+                'Start Date (YYYY-MM-DD)',
+                'Due Date (YYYY-MM-DD)',
+                'AutoCAD Designer Index',
+                'Project Manager Index'
+            ];
+
+            const sampleData = [
+                [
+                    'Sample Project 1',
+                    'This is a sample project description. Replace with your project details.',
+                    'Space Planning',
+                    'High',
+                    '2024-01-15',
+                    '2024-02-15',
+                    '0',
+                    '0'
+                ],
+                [
+                    'Sample Project 2',
+                    'Another sample project for reference. Modify as needed.',
+                    'DBR',
+                    'Medium',
+                    '2024-01-20',
+                    '2024-03-01',
+                    '1',
+                    '1'
+                ],
+                [
+                    'Sample Project 3',
+                    'Third example project with no assignments.',
+                    'BOQ Submission',
+                    'Low',
+                    '2024-02-01',
+                    '2024-03-15',
+                    '',
+                    ''
+                ],
+                ['', '', '', '', '', '', '', ''],
+                ['INSTRUCTIONS:', '', '', '', '', '', '', ''],
+                ['Status options:', 'Space Planning, DBR, BOQ Submission, Tendering, Installation, Complete', '', '', '', '', '', ''],
+                ['Priority options:', 'Low, Medium, High', '', '', '', '', '', ''],
+                ['Date Format:', 'YYYY-MM-DD (e.g., 2024-12-25)', '', '', '', '', '', ''],
+                ['Progress:', 'Auto-calculated based on status (Space Planning=17%, DBR=33%, BOQ Submission=50%, Tendering=67%, Installation=83%, Complete=100%)', '', '', '', '', '', ''],
+                ['', '', '', '', '', '', '', ''],
+                ['AUTOCAD DESIGNER INDEX:', '', '', '', '', '', '', '']
+            ];
+
+            // Dynamically add current designers
+            app.autocadDesigners.forEach((designer, index) => {
+                sampleData.push([index.toString(), `${designer.name} (${designer.email})`, '', '', '', '', '', '']);
+            });
+            sampleData.push(['', '(Leave empty if no designer assigned)', '', '', '', '', '', '']);
+            sampleData.push(['', '', '', '', '', '', '', '']);
+            sampleData.push(['PROJECT MANAGER INDEX:', '', '', '', '', '', '', '']);
+
+            // Dynamically add current managers  
+            app.projectManagers.forEach((manager, index) => {
+                sampleData.push([index.toString(), `${manager.name} (${manager.email})`, '', '', '', '', '', '']);
+            });
+            sampleData.push(['', '(Leave empty if no manager assigned)', '', '', '', '', '', '']);
+            sampleData.push(['', '', '', '', '', '', '', '']);
+            sampleData.push(['NOTE:', 'Reminders are automatically enabled for all projects', '', '', '', '', '', '']);
+            sampleData.push(['NOTE:', 'Reminder emails sent to assigned designer, manager, and samir@vcnsglobal.com', '', '', '', '', '', '']);
+
+            const csvContent = [csvHeaders, ...sampleData]
+                .map(row => row.map(cell => `"${cell}"`).join(','))
+                .join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'project-tracker-template.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            app.showNotification('CSV template downloaded! Fill in your data and convert to JSON for import.', 'success');
+        }
+
+        function downloadExcelTemplate() {
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+
+            // Projects sheet data
+            const projectsData = [
+                ['Project Name', 'Description', 'Status', 'Priority', 'Start Date (YYYY-MM-DD)', 'Due Date (YYYY-MM-DD)', 'AutoCAD Designer Index', 'Project Manager Index'],
+                ['Sample Project 1', 'This is a sample project description. Replace with your project details.', 'Space Planning', 'High', '2024-01-15', '2024-02-15', 0, 0],
+                ['Sample Project 2', 'Another sample project for reference. Modify as needed.', 'DBR', 'Medium', '2024-01-20', '2024-03-01', 1, 1],
+                ['Sample Project 3', 'Third example project with no assignments.', 'BOQ Submission', 'Low', '2024-02-01', '2024-03-15', '', '']
+            ];
+
+            // Instructions sheet data
+            const instructionsData = [
+                ['Field', 'Description', 'Valid Options'],
+                ['Project Name', 'Name of the project (required)', 'Any text'],
+                ['Description', 'Project description (optional)', 'Any text'],
+                ['Status', 'Current project status (has dropdown)', 'Space Planning, DBR, BOQ Submission, Tendering, Installation, Complete'],
+                ['Priority', 'Project priority level (has dropdown)', 'Low, Medium, High'],
+                ['Start Date', 'Project start date (optional)', 'Format: YYYY-MM-DD (e.g., 2024-12-25)'],
+                ['Due Date', 'Project due date (optional)', 'Format: YYYY-MM-DD (e.g., 2024-12-25)'],
+                ['AutoCAD Designer Index', 'Designer assignment (see Reference sheet)', 'Number or leave empty'],
+                ['Project Manager Index', 'Manager assignment (see Reference sheet)', 'Number or leave empty'],
+                ['', '', ''],
+                ['PROGRESS CALCULATION:', '', ''],
+                ['• Progress is auto-calculated based on status', '', ''],
+                ['• Space Planning = 17%', '', ''],
+                ['• DBR = 33%', '', ''],
+                ['• BOQ Submission = 50%', '', ''],
+                ['• Tendering = 67%', '', ''],
+                ['• Installation = 83%', '', ''],
+                ['• Complete = 100%', '', ''],
+                ['', '', ''],
+                ['IMPORTANT NOTES:', '', ''],
+                ['• Reminders are automatically enabled for all projects', '', ''],
+                ['• Reminder emails sent to assigned designer, manager, and samir@vcnsglobal.com', '', ''],
+                ['• System uses predefined reminder timing (7 days, 3 days, due date)', '', ''],
+                ['', '', ''],
+                ['IMPORT PROCESS:', '', ''],
+                ['1. Fill in your project data in the Projects sheet', '', ''],
+                ['2. Use dropdowns for Status and Priority columns', '', ''],
+                ['3. Save this file as Excel format', '', ''],
+                ['4. Convert to JSON format using online converter', '', ''],
+                ['5. Use Import Data button in the application', '', ''],
+                ['6. Structure should match: {"projects": [your_data]}', '', '']
+            ];
+
+            // Dynamic reference sheet data
+            const referenceData = [
+                ['AUTOCAD DESIGNER INDEX REFERENCE', '', ''],
+                ['Index', 'Name', 'Email']
+            ];
+
+            // Dynamically add current designers
+            app.autocadDesigners.forEach((designer, index) => {
+                referenceData.push([index, designer.name, designer.email]);
+            });
+            referenceData.push(['', '(Leave empty if no designer assigned)', '']);
+            referenceData.push(['', '', '']);
+            referenceData.push(['PROJECT MANAGER INDEX REFERENCE', '', '']);
+            referenceData.push(['Index', 'Name', 'Email']);
+
+            // Dynamically add current managers  
+            app.projectManagers.forEach((manager, index) => {
+                referenceData.push([index, manager.name, manager.email]);
+            });
+            referenceData.push(['', '(Leave empty if no manager assigned)', '']);
+
+            // Create sheets
+            const projectsSheet = XLSX.utils.aoa_to_sheet(projectsData);
+            const instructionsSheet = XLSX.utils.aoa_to_sheet(instructionsData);
+            const referenceSheet = XLSX.utils.aoa_to_sheet(referenceData);
+
+            // Add data validation for Status column (column C)
+            const statusValidation = {
+                type: 'list',
+                allowBlank: true,
+                formula1: '"Space Planning,DBR,BOQ Submission,Tendering,Installation,Complete"'
+            };
+
+            // Add data validation for Priority column (column D)
+            const priorityValidation = {
+                type: 'list',
+                allowBlank: true,
+                formula1: '"Low,Medium,High"'
+            };
+
+            // Apply validation to data rows (skip header row)
+            if (!projectsSheet['!dataValidation']) {
+                projectsSheet['!dataValidation'] = [];
+            }
+
+            // Status column validation (column C, rows 2-1000)
+            projectsSheet['!dataValidation'].push({
+                sqref: 'C2:C1000',
+                ...statusValidation
+            });
+
+            // Priority column validation (column D, rows 2-1000)
+            projectsSheet['!dataValidation'].push({
+                sqref: 'D2:D1000',
+                ...priorityValidation
+            });
+
+            // Add sheets to workbook
+            XLSX.utils.book_append_sheet(wb, projectsSheet, 'Projects');
+            XLSX.utils.book_append_sheet(wb, referenceSheet, 'Reference');
+            XLSX.utils.book_append_sheet(wb, instructionsSheet, 'Instructions');
+
+            // Set column widths (removed progress column)
+            projectsSheet['!cols'] = [
+                {wch: 20}, {wch: 40}, {wch: 15}, {wch: 10}, {wch: 15}, {wch: 15}, {wch: 18}, {wch: 18}
+            ];
+            referenceSheet['!cols'] = [
+                {wch: 15}, {wch: 20}, {wch: 25}
+            ];
+            instructionsSheet['!cols'] = [
+                {wch: 25}, {wch: 50}, {wch: 50}
+            ];
+
+            // Save file
+            XLSX.writeFile(wb, 'project-tracker-template.xlsx');
+            
+            app.showNotification('Excel template downloaded! Fill in your data and convert to JSON for import.', 'success');
+        }
+
+        function checkReminders() {
+            app.checkReminders();
+        }
+
+        async function generateReport() {
+            if (app.projects.length === 0) {
+                app.showNotification('No projects available to generate report', 'warning');
+                return;
+            }
+
+            app.showNotification('Generating comprehensive project report...', 'success');
+
+            try {
+                // Calculate analytics
+                const analytics = calculateProjectAnalytics(app.projects);
+                
+                // Generate charts
+                await generateCharts(analytics);
+                
+                // Create PDF report
+                await createPDFReport(analytics);
+                
+                app.showNotification('Project report generated successfully!', 'success');
+            } catch (error) {
+                console.error('Report generation failed:', error);
+                app.showNotification('Failed to generate report. Please try again.', 'error');
+            }
+        }
+
+        function calculateProjectAnalytics(projects) {
+            const analytics = {
+                totalProjects: projects.length,
+                statusBreakdown: {},
+                priorityBreakdown: {},
+                progressBreakdown: {},
+                overdueProjects: 0,
+                dueTodayProjects: 0,
+                completedProjects: 0,
+                averageProgress: 0,
+                projectsByMonth: {},
+                teamWorkload: {designers: {}, managers: {}},
+                upcomingDeadlines: []
+            };
+
+            // Status breakdown
+            const statusOptions = ['Space Planning', 'DBR', 'BOQ Submission', 'Tendering', 'Installation', 'Complete'];
+            statusOptions.forEach(status => analytics.statusBreakdown[status] = 0);
+
+            // Priority breakdown
+            const priorityOptions = ['Low', 'Medium', 'High'];
+            priorityOptions.forEach(priority => analytics.priorityBreakdown[priority] = 0);
+
+            // Progress ranges
+            analytics.progressBreakdown = {
+                '0-20%': 0,
+                '21-40%': 0,
+                '41-60%': 0,
+                '61-80%': 0,
+                '81-99%': 0,
+                '100%': 0
+            };
+
+            let totalProgress = 0;
+            const today = new Date();
+
+            projects.forEach(project => {
+                // Calculate progress based on status
+                const progressByStatus = {
+                    'Space Planning': 17,
+                    'DBR': 33,
+                    'BOQ Submission': 50,
+                    'Tendering': 67,
+                    'Installation': 83,
+                    'Complete': 100
+                };
+                
+                const calculatedProgress = project.progress > 0 ? project.progress : (progressByStatus[project.status] || 0);
+                totalProgress += calculatedProgress;
+
+                // Status breakdown
+                if (analytics.statusBreakdown.hasOwnProperty(project.status)) {
+                    analytics.statusBreakdown[project.status]++;
+                }
+
+                // Priority breakdown
+                if (analytics.priorityBreakdown.hasOwnProperty(project.priority)) {
+                    analytics.priorityBreakdown[project.priority]++;
+                }
+
+                // Progress breakdown
+                if (calculatedProgress === 100) {
+                    analytics.progressBreakdown['100%']++;
+                    analytics.completedProjects++;
+                } else if (calculatedProgress >= 81) {
+                    analytics.progressBreakdown['81-99%']++;
+                } else if (calculatedProgress >= 61) {
+                    analytics.progressBreakdown['61-80%']++;
+                } else if (calculatedProgress >= 41) {
+                    analytics.progressBreakdown['41-60%']++;
+                } else if (calculatedProgress >= 21) {
+                    analytics.progressBreakdown['21-40%']++;
+                } else {
+                    analytics.progressBreakdown['0-20%']++;
+                }
+
+                // Due date analysis
+                if (project.dueDate) {
+                    const daysUntil = app.getDaysUntilDue(project.dueDate);
+                    if (daysUntil < 0) {
+                        analytics.overdueProjects++;
+                    } else if (daysUntil === 0) {
+                        analytics.dueTodayProjects++;
+                    } else if (daysUntil <= 30) {
+                        analytics.upcomingDeadlines.push({
+                            name: project.name,
+                            dueDate: project.dueDate,
+                            daysUntil: daysUntil
+                        });
+                    }
+
+                    // Project creation by month
+                    const createdDate = new Date(project.createdAt);
+                    const monthKey = `${createdDate.getFullYear()}-${(createdDate.getMonth() + 1).toString().padStart(2, '0')}`;
+                    analytics.projectsByMonth[monthKey] = (analytics.projectsByMonth[monthKey] || 0) + 1;
+                }
+
+                // Team workload
+                if (project.autocadDesigner !== undefined && project.autocadDesigner !== '') {
+                    const designer = app.autocadDesigners[project.autocadDesigner];
+                    if (designer) {
+                        analytics.teamWorkload.designers[designer.name] = (analytics.teamWorkload.designers[designer.name] || 0) + 1;
+                    }
+                }
+
+                if (project.projectManager !== undefined && project.projectManager !== '') {
+                    const manager = app.projectManagers[project.projectManager];
+                    if (manager) {
+                        analytics.teamWorkload.managers[manager.name] = (analytics.teamWorkload.managers[manager.name] || 0) + 1;
+                    }
+                }
+            });
+
+            analytics.averageProgress = Math.round(totalProgress / projects.length);
+            analytics.upcomingDeadlines.sort((a, b) => a.daysUntil - b.daysUntil);
+
+            return analytics;
+        }
+
+        async function generateCharts(analytics) {
+            // Status Distribution Chart
+            const statusCtx = document.getElementById('status-chart').getContext('2d');
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(analytics.statusBreakdown),
+                    datasets: [{
+                        data: Object.values(analytics.statusBreakdown),
+                        backgroundColor: [
+                            '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#10b981', '#6366f1'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Project Status Distribution',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Priority Distribution Chart
+            const priorityCtx = document.getElementById('priority-chart').getContext('2d');
+            new Chart(priorityCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(analytics.priorityBreakdown),
+                    datasets: [{
+                        label: 'Number of Projects',
+                        data: Object.values(analytics.priorityBreakdown),
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderColor: ['#059669', '#d97706', '#dc2626'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Project Priority Distribution',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Progress Distribution Chart
+            const progressCtx = document.getElementById('progress-chart').getContext('2d');
+            new Chart(progressCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(analytics.progressBreakdown),
+                    datasets: [{
+                        label: 'Number of Projects',
+                        data: Object.values(analytics.progressBreakdown),
+                        backgroundColor: '#0066FF',
+                        borderColor: '#0052CC',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Project Progress Distribution',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Projects Created Over Time
+            const timelineCtx = document.getElementById('timeline-chart').getContext('2d');
+            const sortedMonths = Object.keys(analytics.projectsByMonth).sort();
+            new Chart(timelineCtx, {
+                type: 'line',
+                data: {
+                    labels: sortedMonths.map(month => {
+                        const [year, monthNum] = month.split('-');
+                        return new Date(year, monthNum - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                    }),
+                    datasets: [{
+                        label: 'Projects Created',
+                        data: sortedMonths.map(month => analytics.projectsByMonth[month]),
+                        borderColor: '#9333EA',
+                        backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Project Creation Timeline',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Wait for charts to render
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        async function createPDFReport(analytics) {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 15;
+            
+            // Helper function to create bordered text box
+            function createTextBox(x, y, width, height, title, content, backgroundColor = '#f8f9fa') {
+                // Draw background
+                pdf.setFillColor(backgroundColor);
+                pdf.rect(x, y, width, height, 'F');
+                
+                // Draw border
+                pdf.setDrawColor('#dee2e6');
+                pdf.setLineWidth(0.5);
+                pdf.rect(x, y, width, height, 'S');
+                
+                // Add title
+                if (title) {
+                    pdf.setFontSize(12);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setTextColor('#495057');
+                    pdf.text(title, x + 3, y + 8);
+                }
+                
+                // Add content
+                if (content) {
+                    pdf.setFontSize(10);
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setTextColor('#212529');
+                    
+                    if (Array.isArray(content)) {
+                        let contentY = title ? y + 15 : y + 8;
+                        content.forEach(line => {
+                            if (contentY < y + height - 3) {
+                                pdf.text(line, x + 3, contentY);
+                                contentY += 5;
+                            }
+                        });
+                    } else {
+                        const lines = pdf.splitTextToSize(content, width - 6);
+                        let contentY = title ? y + 15 : y + 8;
+                        lines.forEach(line => {
+                            if (contentY < y + height - 3) {
+                                pdf.text(line, x + 3, contentY);
+                                contentY += 5;
+                            }
+                        });
+                    }
+                }
+            }
+            
+            // Helper function to create header
+            function createHeader(title, subtitle = null) {
+                // Header background
+                pdf.setFillColor('#0066ff');
+                pdf.rect(0, 0, pageWidth, 35, 'F');
+                
+                // Title
+                pdf.setFontSize(20);
+                pdf.setFont('helvetica', 'bold');
+                pdf.setTextColor('#ffffff');
+                pdf.text(title, pageWidth / 2, 15, { align: 'center' });
+                
+                if (subtitle) {
+                    pdf.setFontSize(12);
+                    pdf.text(subtitle, pageWidth / 2, 25, { align: 'center' });
+                }
+                
+                // Company info
+                pdf.setFontSize(10);
+                pdf.text('VCNS Global', pageWidth / 2, 30, { align: 'center' });
+            }
+            
+            // Page 1: Executive Summary
+            createHeader('AV PROJECT TRACKER REPORT', `Generated on: ${new Date().toLocaleDateString()}`);
+            
+            // Executive Summary Box
+            const summaryContent = [
+                `Total Projects: ${analytics.totalProjects}`,
+                `Completed Projects: ${analytics.completedProjects}`,
+                `Average Progress: ${analytics.averageProgress}%`,
+                `Overdue Projects: ${analytics.overdueProjects}`,
+                `Due Today: ${analytics.dueTodayProjects}`,
+                `Upcoming Deadlines (30 days): ${analytics.upcomingDeadlines.length}`
+            ];
+            createTextBox(margin, 45, pageWidth - 2 * margin, 50, 'EXECUTIVE SUMMARY', summaryContent, '#e3f2fd');
+            
+            // Status Breakdown Box
+            const statusContent = [];
+            Object.entries(analytics.statusBreakdown).forEach(([status, count]) => {
+                if (count > 0) {
+                    statusContent.push(`${status}: ${count} projects`);
+                }
+            });
+            createTextBox(margin, 105, (pageWidth - 3 * margin) / 2, 60, 'STATUS BREAKDOWN', statusContent, '#f3e5f5');
+            
+            // Priority Breakdown Box
+            const priorityContent = [];
+            Object.entries(analytics.priorityBreakdown).forEach(([priority, count]) => {
+                if (count > 0) {
+                    priorityContent.push(`${priority}: ${count} projects`);
+                }
+            });
+            createTextBox(pageWidth / 2 + margin / 2, 105, (pageWidth - 3 * margin) / 2, 60, 'PRIORITY BREAKDOWN', priorityContent, '#e8f5e8');
+            
+            // Team Workload Box
+            const teamContent = [];
+            teamContent.push('AutoCAD Designers:');
+            Object.entries(analytics.teamWorkload.designers).forEach(([name, count]) => {
+                teamContent.push(`  • ${name}: ${count} projects`);
+            });
+            teamContent.push('');
+            teamContent.push('Project Managers:');
+            Object.entries(analytics.teamWorkload.managers).forEach(([name, count]) => {
+                teamContent.push(`  • ${name}: ${count} projects`);
+            });
+            createTextBox(margin, 175, pageWidth - 2 * margin, 70, 'TEAM WORKLOAD', teamContent, '#fff3e0');
+            
+            // Upcoming Deadlines Box (if any)
+            if (analytics.upcomingDeadlines.length > 0) {
+                const deadlineContent = [];
+                analytics.upcomingDeadlines.slice(0, 8).forEach(deadline => {
+                    const dueDate = new Date(deadline.dueDate).toLocaleDateString();
+                    deadlineContent.push(`${deadline.name} - Due: ${dueDate} (${deadline.daysUntil} days)`);
+                });
+                createTextBox(margin, 255, pageWidth - 2 * margin, 25, 'UPCOMING DEADLINES', deadlineContent, '#ffebee');
+            }
+            
+            // Page 2: Charts
+            pdf.addPage();
+            createHeader('PROJECT ANALYTICS CHARTS');
+            
+            const charts = ['status-chart', 'priority-chart', 'progress-chart', 'timeline-chart'];
+            const chartTitles = ['Status Distribution', 'Priority Distribution', 'Progress Distribution', 'Project Timeline'];
+            
+            // First two charts side by side
+            for (let i = 0; i < 2; i++) {
+                const canvas = document.getElementById(charts[i]);
+                const imgData = canvas.toDataURL('image/png');
+                const chartWidth = (pageWidth - 3 * margin) / 2;
+                const chartX = i === 0 ? margin : pageWidth / 2 + margin / 2;
+                
+                // Chart title box
+                createTextBox(chartX, 45, chartWidth, 8, chartTitles[i], null, '#f5f5f5');
+                
+                // Chart image
+                pdf.addImage(imgData, 'PNG', chartX + 2, 55, chartWidth - 4, 60);
+                
+                // Chart border
+                pdf.setDrawColor('#dee2e6');
+                pdf.rect(chartX, 53, chartWidth, 64, 'S');
+            }
+            
+            // Third chart
+            const canvas3 = document.getElementById(charts[2]);
+            const imgData3 = canvas3.toDataURL('image/png');
+            createTextBox(margin, 125, pageWidth - 2 * margin, 8, chartTitles[2], null, '#f5f5f5');
+            pdf.addImage(imgData3, 'PNG', margin + 2, 135, pageWidth - 2 * margin - 4, 60);
+            pdf.setDrawColor('#dee2e6');
+            pdf.rect(margin, 133, pageWidth - 2 * margin, 64, 'S');
+            
+            // Timeline chart on separate section
+            const canvas4 = document.getElementById(charts[3]);
+            const imgData4 = canvas4.toDataURL('image/png');
+            createTextBox(margin, 205, pageWidth - 2 * margin, 8, chartTitles[3], null, '#f5f5f5');
+            pdf.addImage(imgData4, 'PNG', margin + 2, 215, pageWidth - 2 * margin - 4, 60);
+            pdf.setDrawColor('#dee2e6');
+            pdf.rect(margin, 213, pageWidth - 2 * margin, 64, 'S');
+            
+            // Page 3+: Detailed Project List
+            pdf.addPage();
+            createHeader('DETAILED PROJECT LIST');
+            
+            let yPos = 50;
+            const projectsPerPage = 4;
+            let projectCount = 0;
+            
+            app.projects.forEach((project, index) => {
+                if (projectCount > 0 && projectCount % projectsPerPage === 0) {
+                    pdf.addPage();
+                    createHeader('DETAILED PROJECT LIST (Continued)');
+                    yPos = 50;
+                }
+                
+                const progressByStatus = {
+                    'Space Planning': 20, 'DBR': 40, 'BOQ Submission': 60,
+                    'Tendering': 80, 'Installation': 90, 'Complete': 100
+                };
+                const calculatedProgress = project.progress > 0 ? project.progress : (progressByStatus[project.status] || 0);
+                
+                // Project details
+                const projectContent = [
+                    `Description: ${project.description || 'No description provided'}`,
+                    `Status: ${project.status} (${calculatedProgress}% Complete)`,
+                    `Priority: ${project.priority}`,
+                    `Due Date: ${new Date(project.dueDate).toLocaleDateString()}`,
+                    `Start Date: ${project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not Set'}`,
+                    `Designer: ${project.autocadDesigner !== undefined && project.autocadDesigner !== '' ? 
+                        app.autocadDesigners[project.autocadDesigner]?.name : 'Not Assigned'}`,
+                    `Manager: ${project.projectManager !== undefined && project.projectManager !== '' ? 
+                        app.projectManagers[project.projectManager]?.name : 'Not Assigned'}`
+                ];
+                
+                // Color coding based on status
+                let bgColor = '#f8f9fa';
+                if (calculatedProgress === 100) bgColor = '#d4edda';
+                else if (analytics.overdueProjects > 0 && new Date(project.dueDate) < new Date()) bgColor = '#f8d7da';
+                else if (calculatedProgress >= 80) bgColor = '#d1ecf1';
+                
+                createTextBox(margin, yPos, pageWidth - 2 * margin, 55, 
+                    `${index + 1}. ${project.name}`, projectContent, bgColor);
+                
+                yPos += 65;
+                projectCount++;
+            });
+            
+            // Save PDF
+            const fileName = `AV_Project_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+            pdf.save(fileName);
+        }
+
+        // Designer Management Functions
+        function showDesignerManager() {
+            const modal = document.getElementById('designer-manager-modal');
+            modal.style.display = 'block';
+            renderDesignersList();
+        }
+
+        function hideDesignerManager() {
+            document.getElementById('designer-manager-modal').style.display = 'none';
+            document.getElementById('designer-name').value = '';
+            document.getElementById('designer-email').value = '';
+        }
+
+        function addDesigner() {
+            const name = document.getElementById('designer-name').value.trim();
+            const email = document.getElementById('designer-email').value.trim();
+            
+            if (!name || !email) {
+                app.showNotification('Please enter both name and email', 'error');
+                return;
+            }
+            
+            app.autocadDesigners.push({ name, email });
+            app.saveDesigners();
+            app.populateDropdowns();
+            renderDesignersList();
+            
+            document.getElementById('designer-name').value = '';
+            document.getElementById('designer-email').value = '';
+            app.showNotification('Designer added successfully', 'success');
+        }
+
+        function removeDesigner(index) {
+            if (confirm('Are you sure you want to remove this designer?')) {
+                app.autocadDesigners.splice(index, 1);
+                app.saveDesigners();
+                app.populateDropdowns();
+                renderDesignersList();
+                app.showNotification('Designer removed successfully', 'success');
+            }
+        }
+
+        function renderDesignersList() {
+            const list = document.getElementById('designers-list');
+            list.innerHTML = '<h4 style="color: #ffffff; margin-bottom: 15px;">Current Designers:</h4>';
+            
+            app.autocadDesigners.forEach((designer, index) => {
+                list.innerHTML += `
+                    <div style="background: rgba(255,255,255,0.1); padding: 10px; margin: 5px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #ffffff; font-weight: bold;">${designer.name} - ${designer.email}</span>
+                        <button class="btn btn-danger btn-small" onclick="removeDesigner(${index})">Remove</button>
+                    </div>
+                `;
+            });
+        }
+
+        // Manager Management Functions
+        function showManagerManager() {
+            const modal = document.getElementById('manager-manager-modal');
+            modal.style.display = 'block';
+            renderManagersList();
+        }
+
+        function hideManagerManager() {
+            document.getElementById('manager-manager-modal').style.display = 'none';
+            document.getElementById('manager-name').value = '';
+            document.getElementById('manager-email').value = '';
+        }
+
+        function addManager() {
+            const name = document.getElementById('manager-name').value.trim();
+            const email = document.getElementById('manager-email').value.trim();
+            
+            if (!name || !email) {
+                app.showNotification('Please enter both name and email', 'error');
+                return;
+            }
+            
+            app.projectManagers.push({ name, email });
+            app.saveManagers();
+            app.populateDropdowns();
+            renderManagersList();
+            
+            document.getElementById('manager-name').value = '';
+            document.getElementById('manager-email').value = '';
+            app.showNotification('Manager added successfully', 'success');
+        }
+
+        function removeManager(index) {
+            if (confirm('Are you sure you want to remove this manager?')) {
+                app.projectManagers.splice(index, 1);
+                app.saveManagers();
+                app.populateDropdowns();
+                renderManagersList();
+                app.showNotification('Manager removed successfully', 'success');
+            }
+        }
+
+        function renderManagersList() {
+            const list = document.getElementById('managers-list');
+            list.innerHTML = '<h4 style="color: #ffffff; margin-bottom: 15px;">Current Managers:</h4>';
+            
+            app.projectManagers.forEach((manager, index) => {
+                list.innerHTML += `
+                    <div style="background: rgba(255,255,255,0.1); padding: 10px; margin: 5px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #ffffff; font-weight: bold;">${manager.name} - ${manager.email}</span>
+                        <button class="btn btn-danger btn-small" onclick="removeManager(${index})">Remove</button>
+                    </div>
+                `;
+            });
+        }
+
+        // Initialize the app
+        const app = new ProjectTracker();
+
+        // Auto-check reminders every hour
+        setInterval(() => {
+            app.checkReminders();
+        }, 60 * 60 * 1000);
+    </script>
+</body>
+</html>
